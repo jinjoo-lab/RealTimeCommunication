@@ -4,6 +4,7 @@ import com.example.realtimecommunication.module.location.dto.LocationDto;
 import com.example.realtimecommunication.module.location.service.LocationService;
 import com.example.realtimecommunication.module.location.service.SseService;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 @RequestMapping("/location")
+@Slf4j
 public class LocationController {
 
     private final LocationService locationService;
@@ -30,12 +32,14 @@ public class LocationController {
     }
 
     @GetMapping(value = "/sse/connect", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ResponseEntity<SseEmitter> connectSse() {
-        return ResponseEntity.ok(sseService.add());
+    public SseEmitter connectSse() {
+        log.info("CONNECT");
+        return sseService.add();
     }
 
     @PostMapping(value = "/sse/share")
     public ResponseEntity<Void> shareCurLocationBySse() {
+        log.info("SHARE");
         sseService.shareCurLocation();
         return ResponseEntity.noContent().build();
     }
