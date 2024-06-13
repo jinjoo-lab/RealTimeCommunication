@@ -20,7 +20,7 @@ public class StompController {
     }
 
     @MessageMapping("/share/{id}")
-    public void shareCurLocation(@DestinationVariable final Long id) {
+    public void shareCurLocationByStomp(@DestinationVariable final Long id) {
         template.convertAndSend(
                 String.format("/sub/location/%d", id), locationService.shareCurLocation());
     }

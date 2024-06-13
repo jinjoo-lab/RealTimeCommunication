@@ -1,6 +1,7 @@
 package com.example.realtimecommunication.module.location.service;
 
 import com.example.realtimecommunication.module.location.dto.LocationDto;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -10,9 +11,9 @@ public class LocationService {
     }
 
     private LocationDto makeRandomLocation() {
-        double landomX = Math.random() * 100;
-        double landomY = Math.random() * 100;
+        double randomX = Math.random() * 100;
+        double randomY = Math.random() * 100;
 
-        return new LocationDto(landomX,landomY);
+        return new LocationDto(randomX, randomY);
     }
 }
