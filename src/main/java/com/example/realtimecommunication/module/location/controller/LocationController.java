@@ -8,9 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
@@ -42,5 +44,15 @@ public class LocationController {
         log.info("SHARE");
         sseService.shareCurLocation();
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/long/{groupId}")
+    public DeferredResult<LocationDto> poll(@PathVariable final Long groupId) {
+        return locationService.longPoll(groupId);
+    }
+
+    @PostMapping("/long/{groupId}/notify")
+    public void notifyGroup(@PathVariable final Long groupId) {
+        locationService.notifyGroup(groupId);
     }
 }
