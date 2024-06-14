@@ -22,10 +22,10 @@ public class SseService {
         final SseEmitter emitter = new SseEmitter();
         this.emitters.add(emitter);
 
-       emitter.onCompletion(() -> this.emitters.remove(emitter));
-       emitter.onTimeout(emitter::complete);
+        emitter.onCompletion(() -> this.emitters.remove(emitter));
+        emitter.onTimeout(emitter::complete);
 
-       shareCurLocation();
+        shareCurLocation();
         return emitter;
     }
 
