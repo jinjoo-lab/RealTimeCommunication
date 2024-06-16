@@ -37,7 +37,7 @@ public class SseService {
                         emit.send(
                                 SseEmitter.event()
                                         .name(SSE_EVENT_NAME)
-                                        .data(locationService.shareCurLocation()));
+                                        .data(locationService.makeRandomLocation()));
                         emit.complete();
                     } catch (final Exception e) {
                         removeEmitter(emit);
