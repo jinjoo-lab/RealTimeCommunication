@@ -13,8 +13,10 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 @Component
 @Slf4j
@@ -22,7 +24,8 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
 
     private final ObjectMapper objectMapper;
     private final LocationService locationService;
-    private final Set<WebSocketSession> sessions = ConcurrentHashMap.newKeySet();
+
+    private final Map<Long, Set<WebSocketSession>> groupSessions =  new ConcurrentHashMap<>();
 
     public CustomWebSocketHandler(LocationService locationService, ObjectMapper objectMapper) {
         this.locationService = locationService;
@@ -32,29 +35,54 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message)
             throws Exception {
-        LocationDto location = locationService.shareCurLocation();
-        sessions.forEach(
+        Long groupId = extractGroupIdFromSession(session);
+        LocationDto location = locationService.makeRandomLocation();
+
+        Set<WebSocketSession> set = groupSessions.get(groupId);
+        set.forEach(
                 s -> {
-                    if (!s.isOpen()) {
-                        sessions.remove(s);
+                    if(!s.isOpen()) {
+                        set.remove(s);
                         return;
                     }
+
                     try {
                         s.sendMessage(new TextMessage(objectMapper.writeValueAsString(location)));
-                    } catch (IOException e) {
+                    }catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                });
+                }
+        );
+
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        sessions.add(session);
+        Long groupId = extractGroupIdFromSession(session);
+        Set set = groupSessions.getOrDefault(groupId,new CopyOnWriteArraySet<>());
+        set.add(session);
+        groupSessions.put(groupId,set);
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status)
             throws Exception {
-        sessions.remove(session);
+        Long groupId = extractGroupIdFromSession(session);
+        if (groupId != null) {
+            Set<WebSocketSession> sessions = groupSessions.get(groupId);
+            if (sessions != null) {
+                sessions.remove(session);
+                if (sessions.isEmpty()) {
+                    groupSessions.remove(groupId);
+                }
+            }
+        }
     }
+
+    private Long extractGroupIdFromSession(WebSocketSession session) {
+        Long groupId = (Long) session.getAttributes().get("groupId");
+        return groupId;
+    }
+
+
 }

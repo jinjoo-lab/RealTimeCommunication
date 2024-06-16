@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+
 @RestController
 @RequestMapping("/location")
 @Slf4j
 public class LocationController {
-
     private final LocationService locationService;
     private final SseService sseService;
 
@@ -29,9 +29,9 @@ public class LocationController {
         this.sseService = sseService;
     }
 
-    @GetMapping("/cur")
-    public ResponseEntity<LocationDto> shareCurLocation() {
-        return ResponseEntity.ok(locationService.shareCurLocation());
+    @GetMapping("/cur/{id}")
+    public ResponseEntity<LocationDto> shareCurLocation(@PathVariable(name = "id") Long id) {
+        return ResponseEntity.ok(locationService.shareCurLocation(id));
     }
 
     @GetMapping(value = "/sse/connect", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
