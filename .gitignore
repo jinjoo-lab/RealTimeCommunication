@@ -41,3 +41,4 @@ out/
 /src/main/generated/
 /load-test/*.html
 /load-test/*.json
+/load-test/__pycache__/
