@@ -31,6 +31,8 @@ services:
       - "9090:9090"
     networks:
       - app-tier
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
 
 networks:
   app-tier:
