@@ -32,7 +32,7 @@ services:
     networks:
       - app-tier
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
 
 networks:
   app-tier:

@@ -38,7 +38,7 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
         Long groupId = extractGroupIdFromSession(session);
         LocationDto location = locationService.makeRandomLocation();
 
-        Set<WebSocketSession> set = groupSessions.get(groupId);
+        Set<WebSocketSession> set = groupSessions.getOrDefault(groupId,new CopyOnWriteArraySet<>());
         set.forEach(
                 s -> {
                     if(!s.isOpen()) {
@@ -47,6 +47,7 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
                     }
 
                     try {
+                        log.info("WEBSOCKET : "+location.getX()+" "+location.getY());
                         s.sendMessage(new TextMessage(objectMapper.writeValueAsString(location)));
                     }catch (IOException e) {
                         throw new RuntimeException(e);
@@ -58,7 +59,7 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        Long groupId = extractGroupIdFromSession(session);
+        Long groupId = (long)(Math.random() * 10);
         Set set = groupSessions.getOrDefault(groupId,new CopyOnWriteArraySet<>());
         set.add(session);
         groupSessions.put(groupId,set);
@@ -80,7 +81,7 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
     }
 
     private Long extractGroupIdFromSession(WebSocketSession session) {
-        Long groupId = (Long) session.getAttributes().get("groupId");
+        Long groupId = (long)(Math.random() * 10);
         return groupId;
     }
 

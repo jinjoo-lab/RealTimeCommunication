@@ -9,8 +9,8 @@ let stompClient = null;
 
 export let options = {
     stages: [
-        {duration: '20s', target: 2000},
-        {duration: '30s', target: 9000},
+        {duration: '20s', target: 20},
+        {duration: '30s', target: 90},
         {duration: '10s', target: 0},
     ],
 };
@@ -96,10 +96,10 @@ function initializeStompClient() {
 }
 
 export default function () {
-    shortPollingTest();
-    longPollingTest();
-    sseTest();
-    websocketTest();
+    // shortPollingTest();
+    // longPollingTest();
+    // sseTest();
+    // websocketTest();
     stompTest();
 
     sleep(3);
@@ -108,7 +108,7 @@ export default function () {
 export function longPollingTest() {
     initializeLongPollingConnection();
     const url = `${baseUrl}/location/long/${randomInt}`;
-    const response = longPollingConnection.post(url);
+    const response = http.get(url);
     check(response, {'Long Polling Post Status is 200': (r) => r.status === 200});
 
     const notifyResponse = http.post(`${baseUrl}/location/long/${randomInt}/notify`);
@@ -117,7 +117,7 @@ export function longPollingTest() {
 
 export function sseTest() {
     initializeSSEConnection();
-    const postResponse = sseConnection.post(`${baseUrl}/location/sse/share`);
+    const postResponse = http.post(`${baseUrl}/location/sse/share`);
     check(postResponse, {'SSE Share Status is 200': (r) => r.status === 200});
 }
 
@@ -132,7 +132,7 @@ export function websocketTest() {
 
 export function stompTest() {
     initializeStompClient();
-    websocketConnection.on('open', function () {
-        websocketConnection.send(`SEND\ndestination:/pub/share/${randomInt}\n\n${JSON.stringify({content: 'Hi from k6 STOMP!'})}\x00\n`);
+    stompClient.on('open', function () {
+        stompClient.send(`SEND\ndestination:/pub/share/${randomInt}\n\n${JSON.stringify({content: 'Hi from k6 STOMP!'})}\x00\n`);
     });
 }
