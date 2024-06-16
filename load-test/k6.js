@@ -150,10 +150,10 @@ function uuid() {
 
 
 export default function () {
-    // shortPollingTest();
-    // longPollingTest();
-    // sseTest();
-    // websocketTest();
+    shortPollingTest();
+    longPollingTest();
+    sseTest();
+    websocketTest();
     stompTest();
 
     sleep(3);
