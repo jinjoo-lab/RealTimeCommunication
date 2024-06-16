@@ -9,8 +9,8 @@ let stompClient = null;
 
 export let options = {
     stages: [
-        {duration: '20s', target: 20},
-        {duration: '30s', target: 90},
+        {duration: '20s', target: 300},
+        {duration: '30s', target: 10000},
         {duration: '10s', target: 0},
     ],
 };
@@ -117,23 +117,9 @@ function initializeStompClient(callback) {
             callback(socket);
         });
 
-        socket.on('message', function (message) {
-            console.log('Received message:', message);
-        });
+        socket.on('message', function (message) {});
 
-        socket.on('close', function () {
-            console.log('WebSocket connection closed');
-        });
-
-        socket.on('error', function (e) {
-            console.error('WebSocket error:', e.error());
-        });
-
-        // WebSocket 연결을 10초 후에 종료합니다.
-        socket.setTimeout(function () {
-            console.log('Closing the socket after 10 seconds');
-            socket.close();
-        }, 10000);
+        socket.on('close', function () {});
 
         stompClient = socket; // WebSocket 객체를 stompClient에 할당
     });
@@ -150,10 +136,10 @@ function uuid() {
 
 
 export default function () {
-    shortPollingTest();
-    longPollingTest();
-    sseTest();
-    websocketTest();
+    //shortPollingTest();
+    // longPollingTest();
+    // sseTest();
+    // websocketTest();
     stompTest();
 
     sleep(3);
