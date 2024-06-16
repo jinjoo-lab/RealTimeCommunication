@@ -48,7 +48,10 @@ public class LocationService {
                 .ifPresent(
                         q -> {
                             while (!q.isEmpty()) {
-                                q.poll().setResult(makeRandomLocation());
+                                final DeferredResult<LocationDto> connection = q.poll();
+                                if (connection != null) {
+                                    connection.setResult(makeRandomLocation());
+                                }
                             }
                         });
     }

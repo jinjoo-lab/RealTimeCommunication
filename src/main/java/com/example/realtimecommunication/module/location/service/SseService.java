@@ -3,7 +3,6 @@ package com.example.realtimecommunication.module.location.service;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -22,14 +21,16 @@ public class SseService {
         final SseEmitter emitter = new SseEmitter();
         this.emitters.add(emitter);
 
-        emitter.onCompletion(() -> this.emitters.remove(emitter));
-        emitter.onTimeout(emitter::complete);
-
         shareCurLocation();
         return emitter;
     }
 
     public void shareCurLocation() {
+
+        emitters.forEach(emit -> emit.onError(e -> removeEmitter(emit)));
+        emitters.forEach(emit -> emit.onTimeout(() -> removeEmitter(emit)));
+        emitters.forEach(emit -> emit.onCompletion(() -> removeEmitter(emit)));
+
         emitters.forEach(
                 emit -> {
                     try {
@@ -37,9 +38,14 @@ public class SseService {
                                 SseEmitter.event()
                                         .name(SSE_EVENT_NAME)
                                         .data(locationService.shareCurLocation()));
-                    } catch (final IOException e) {
-                        throw new RuntimeException(e);
+                    } catch (final Exception e) {
+                        removeEmitter(emit);
                     }
                 });
+    }
+
+    private synchronized void removeEmitter(final SseEmitter emitter) {
+        emitter.complete();
+        emitters.remove(emitter);
     }
 }

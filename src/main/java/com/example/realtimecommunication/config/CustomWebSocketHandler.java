@@ -3,13 +3,16 @@ package com.example.realtimecommunication.config;
 import com.example.realtimecommunication.module.location.dto.LocationDto;
 import com.example.realtimecommunication.module.location.service.LocationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -27,22 +30,31 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        log.info("HANDLE WEBSOCKET MESSAGE");
+    protected void handleTextMessage(WebSocketSession session, TextMessage message)
+            throws Exception {
         LocationDto location = locationService.shareCurLocation();
-
-        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(location)));
+        sessions.forEach(
+                s -> {
+                    if (!s.isOpen()) {
+                        sessions.remove(s);
+                        return;
+                    }
+                    try {
+                        s.sendMessage(new TextMessage(objectMapper.writeValueAsString(location)));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        log.info("WEBSOCKET CONNECT");
         sessions.add(session);
     }
 
     @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        log.info("WEBSOCKET DISCONNECT");
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status)
+            throws Exception {
         sessions.remove(session);
     }
 }
