@@ -1,8 +1,12 @@
 import random
+import stomper
+import json
+import time
 
-from locust import HttpUser, task, between
-from stomp import Connection, PrintingListener
-from websocket import WebSocketApp
+from locust import events
+from locust import HttpUser, User, task, between
+from websocket import create_connection
+
 
 class SSE(HttpUser):
     wait_time = between(2.5, 3.5)
@@ -18,14 +22,13 @@ class SSE(HttpUser):
 class LongPolling(HttpUser):
     wait_time = between(2.5, 3.5)
     host = "http://localhost:8080"
-    group_id = random.randint(1, 10)
 
     def on_start(self):
-        self.client.get(f"/location/long/{self.group_id}")
+        self.client.get(f"/location/long/{random.randint(1, 10)}", stream=True)
 
     @task
     def long_polling_task(self):
-        self.client.post(f"/location/long/{self.group_id}/notify")
+        self.client.post(f"/location/long/{random.randint(1, 10)}/notify")
 
 class ShortPolling(HttpUser):
     wait_time = between(2.5, 3.5)
@@ -35,42 +38,118 @@ class ShortPolling(HttpUser):
     def short_polling_task(self):
         self.client.get("/location/cur")
 
-class WebSocket(HttpUser):
+class WebSocket(User):
     wait_time = between(2.5, 3.5)
-    host = "ws://localhost:8080"
+    host = "ws://localhost:8080/ws"
     ws = None
 
     def on_start(self):
-        self.setup_websocket()
+        self.connect()
 
-    def setup_websocket(self):
-        self.ws = WebSocketApp("ws://localhost:8080/ws", on_close=self.on_close)
+    def connect(self):
+        try:
+            self.ws = create_connection(self.host)
+        except Exception as e:
+            pass
 
     @task
-    def websocket_task(self):
-        if self.ws and self.ws.sock and self.ws.sock.connected:
-            self.ws.send("message")
-            return
-        self.setup_websocket()
-        self.ws.send("message")
-    
+    def send_message(self):
+        try:
+            if self.ws and self.ws.connected:
+                self.ws.send("Hello from Locust!")
+                self.ws.recv()
+            else:
+                self.connect()
+        except Exception as e:
+            self.connect()
 
-    def on_close(self):
-        self.setup_websocket()
+    def on_stop(self):
+        if self.ws and self.ws.connected:
+            self.ws.close()
 
 class STOMP(HttpUser):
     wait_time = between(2.5, 3.5)
-    host = "localhost"
-    conn = None
-    group_id = None
+    host = "ws://localhost:8080/location"
 
     def on_start(self):
-        self.group_id = random.randint(1, 10)
-        self.conn = Connection([('localhost', 8080)])
-        self.conn.set_listener('', PrintingListener())
-        self.conn.connect('user', 'pass', wait=True)
-        self.conn.subscribe(f'/sub/location/{self.group_id}', id=f"{self.group_id}", ack='auto')
+        self.stompClient = StompClient()
+        self.stompClient.connect()
+        self.stompClient.subscribe()
 
     @task
     def stomp_task(self):
-        self.conn.send(body='STOMP Test Message', destination=f'/pub/share/{self.group_id}')
+        self.stompClient.send({"content":"Hi!"}, '')
+
+
+class StompClient(object):
+    wait_time = between(2.5, 3.5)
+    host = "localhost"
+    port = 8080
+    endpoint = "location"
+    group_id = None
+    ws = None
+
+    def __init__(self):
+        self.ws_uri = f"ws://{self.host}:{self.port}/{self.endpoint}"
+        self.group_id = random.randint(1, 10)
+
+    def on_start(self):
+        try:
+            self.connect()
+            self.subscribe()
+        except Exception as e:
+            self.log_error("Failed to connect or subscribe: %s" % str(e))
+            events.request.fire(request_type="stomp", name="connect", response_time=0, exception=e, response_length=0)
+
+    def on_stop(self):
+        self.close()
+
+    def connect(self):
+        start_time = time.time()
+        try:
+            self.ws = create_connection(self.ws_uri)
+            self.ws.send("CONNECT\naccept-version:1.0,1.1,2.0\n\n\x00\n")
+        except Exception as e:
+            total_time = int((time.time() - start_time) * 1000)
+            events.request.fire(request_type="stomp", name="connect", response_time=total_time, exception=e , response_length=0)
+            raise e
+        else:
+            total_time = int((time.time() - start_time) * 1000)
+            events.request.fire(request_type="stomp", name="connect", response_time=total_time, response_length=0)
+
+    def subscribe(self):
+        start_time = time.time()
+        try:
+            self.ws.send(f"SUBSCRIBE\nid:{self.group_id}\ndestination:/sub/location/{self.group_id}\n\n\x00\n")
+        except Exception as e:
+            total_time = int((time.time() - start_time) * 1000)
+            events.request.fire(request_type="stomp", name="subscribe", response_time=total_time, exception=e , response_length=0)
+            raise e
+        else:
+            total_time = int((time.time() - start_time) * 1000)
+            events.request.fire(request_type="stomp", name="subscribe", response_time=total_time, response_length=0)
+
+
+    def close(self):
+        if self.ws:
+            self.ws.close()
+
+    @task
+    def stomp_task(self):
+        self.send(body='STOMP Test Message', destination=f'/pub/share/{self.group_id}')
+
+    def send(self, body, destination):
+        start_time = time.time()
+        try:
+            msg = stomper.Frame()
+            msg.cmd = 'SEND'
+            msg.headers = {'destination': f'/pub/share/{self.group_id}'}
+            msg.body = json.dumps(body)
+            self.ws.send(msg.pack())
+        except Exception as e:
+            total_time = int((time.time() - start_time) * 1000)
+            events.request.fire(request_type="stomp", name="send", response_time=total_time, exception=e , response_length=0)
+            raise e
+        else:
+            total_time = int((time.time() - start_time) * 1000)
+            events.request.fire(request_type="stomp", name="send", response_time=total_time, response_length=0)
