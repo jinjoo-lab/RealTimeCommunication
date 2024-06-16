@@ -38,13 +38,14 @@ public class SseService {
                                 SseEmitter.event()
                                         .name(SSE_EVENT_NAME)
                                         .data(locationService.shareCurLocation()));
+                        emit.complete();
                     } catch (final Exception e) {
                         removeEmitter(emit);
                     }
                 });
     }
 
-    private synchronized void removeEmitter(final SseEmitter emitter) {
+    private void removeEmitter(final SseEmitter emitter) {
         emitter.complete();
         emitters.remove(emitter);
     }

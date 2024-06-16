@@ -8,7 +8,7 @@ from locust import HttpUser, User, task, between
 from websocket import create_connection
 
 
-class SSE(HttpUser):
+class SSE(HttpUser): # 1700
     wait_time = between(2.5, 3.5)
     host = "http://localhost:8080"
 
@@ -18,8 +18,9 @@ class SSE(HttpUser):
     @task
     def sse_task(self):
         self.client.post("/location/sse/share")
+        self.client.get("/location/sse/connect", stream=True)
 
-class LongPolling(HttpUser):
+class LongPolling(HttpUser): # 2500
     wait_time = between(2.5, 3.5)
     host = "http://localhost:8080"
 
@@ -30,7 +31,7 @@ class LongPolling(HttpUser):
     def long_polling_task(self):
         self.client.post(f"/location/long/{random.randint(1, 10)}/notify")
 
-class ShortPolling(HttpUser):
+class ShortPolling(HttpUser): # 1900 (요동이 많이 침)
     wait_time = between(2.5, 3.5)
     host = "http://localhost:8080"
 
@@ -57,17 +58,18 @@ class WebSocket(User):
         try:
             if self.ws and self.ws.connected:
                 self.ws.send("Hello from Locust!")
-                self.ws.recv()
+                response = self.ws.recv()
             else:
                 self.connect()
-        except Exception as e:
+        except WebSocketConnectionClosedException as e:
             self.connect()
 
     def on_stop(self):
         if self.ws and self.ws.connected:
             self.ws.close()
+            print("WebSocket 연결 종료")
 
-class STOMP(HttpUser):
+class STOMP(HttpUser): # 2700
     wait_time = between(2.5, 3.5)
     host = "ws://localhost:8080/location"
 
