@@ -110,7 +110,7 @@ function initializeStompClient(callback) {
             socket.send('CONNECT\naccept-version:1.0,1.1,2.0\n\n\x00\n');
 
             // STOMP SUBSCRIBE 메시지를 전송합니다.
-            const subscribeMessage = `SUBSCRIBE\nid:${randomInt}\ndestination:/sub/location/${randomInt}\n\n\x00\n`;
+            const subscribeMessage = `SUBSCRIBE\nid:${uuid()}\ndestination:/sub/location/${randomInt}\n\n\x00\n`;
             socket.send(subscribeMessage);
 
             // WebSocket 연결이 열렸을 때의 콜백 함수 호출
@@ -136,6 +136,15 @@ function initializeStompClient(callback) {
         }, 10000);
 
         stompClient = socket; // WebSocket 객체를 stompClient에 할당
+    });
+}
+
+function uuid() {
+    const pattern = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
+    return pattern.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
     });
 }
 
