@@ -1,6 +1,14 @@
 version: "3.8"
 
 services:
+  backend:
+    build: ../../RealTimeCommunication
+    container_name: backend
+    ports:
+      - "8080:8080"
+    networks:
+      - app-tier
+    restart: always
   influxdb:
     image: bitnami/influxdb:1.8.5
     platform: linux/amd64
@@ -15,7 +23,7 @@ services:
       - INFLUXDB_DB=k6db
     networks:
       - app-tier
-  granafa:
+  grafana:
     image: bitnami/grafana
     container_name: grafana
     ports:
