@@ -17,6 +17,7 @@ export let options = {
 
 const baseUrl = 'http://localhost:8080';
 const wsUrl = 'ws://localhost:8080/ws';
+const stompUrl = 'ws://localhost:8080/location';
 const randomInt = getRandomInt();
 
 function getRandomInt() {
@@ -78,7 +79,7 @@ function initializeStompClient() {
         return stompClient;
     }
 
-    const client = ws.connect(wsUrl, function (socket) {
+    const client = ws.connect(stompUrl, function (socket) {
         socket.on('open', function () {
             socket.send('CONNECT\naccept-version:1.0,1.1,2.0\n\n\x00\n');
             socket.send(`SUBSCRIBE\nid:${randomInt}\ndestination:/sub/location/${randomInt}\n\n\x00\n`);
