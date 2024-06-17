@@ -9,5 +9,4 @@ public class RealTimeCommunicationApplication {
     public static void main(String[] args) {
         SpringApplication.run(RealTimeCommunicationApplication.class, args);
     }
-
 }

@@ -74,28 +74,6 @@ function initializeWebSocketConnection() {
     return connection;
 }
 
-// function initializeStompClient() {
-//     if (stompClient) {
-//         return stompClient;
-//     }
-//
-//     const client = ws.connect(stompUrl, function (socket) {
-//         socket.on('open', function () {
-//             socket.send('CONNECT\naccept-version:1.0,1.1,2.0\n\n\x00\n');
-//             socket.send(`SUBSCRIBE\nid:${randomInt}\ndestination:/sub/location/${randomInt}\n\n\x00\n`);
-//         });
-//
-//         socket.on('message', function (message) {
-//         });
-//
-//         socket.on('close', function () {
-//         });
-//     });
-//
-//     stompClient = client;
-//     return client;
-// }
-
 function initializeStompClient(callback) {
     if (stompClient) {
         callback(stompClient); // 이미 stompClient가 존재하면 콜백 호출
@@ -117,9 +95,11 @@ function initializeStompClient(callback) {
             callback(socket);
         });
 
-        socket.on('message', function (message) {});
+        socket.on('message', function (message) {
+        });
 
-        socket.on('close', function () {});
+        socket.on('close', function () {
+        });
 
         stompClient = socket; // WebSocket 객체를 stompClient에 할당
     });
@@ -127,7 +107,7 @@ function initializeStompClient(callback) {
 
 function uuid() {
     const pattern = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
-    return pattern.replace(/[xy]/g, function(c) {
+    return pattern.replace(/[xy]/g, function (c) {
         const r = Math.random() * 16 | 0;
         const v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
@@ -171,14 +151,9 @@ export function websocketTest() {
 }
 
 export function stompTest() {
-    // initializeStompClient();
-    //
-    // stompClient.on('open', function () {
-    //     stompClient.send(`SEND\ndestination:/pub/share/${randomInt}\n\n${JSON.stringify({content: 'Hi from k6 STOMP!'})}\x00\n`);
-    // });
 
     initializeStompClient(function (socket) {
-        const stompMessage = `SEND\ndestination:/pub/share/${randomInt}\n\n${JSON.stringify({ content: 'Hi from k6 STOMP!' })}\x00\n`;
+        const stompMessage = `SEND\ndestination:/pub/share/${randomInt}\n\n${JSON.stringify({content: 'Hi from k6 STOMP!'})}\x00\n`;
 
         // WebSocket 연결이 열리면 STOMP 메시지를 전송합니다.
         socket.send(stompMessage);

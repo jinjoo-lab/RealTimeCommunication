@@ -1,6 +1,5 @@
 package com.example.realtimecommunication.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
@@ -15,8 +14,9 @@ public class WebSocketConfig implements WebSocketConfigurer {
     public WebSocketConfig(CustomWebSocketHandler customWebSocketHandler) {
         this.customWebSocketHandler = customWebSocketHandler;
     }
+
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(customWebSocketHandler,"/ws").setAllowedOrigins("*");
+        registry.addHandler(customWebSocketHandler, "/ws").setAllowedOrigins("*");
     }
 }

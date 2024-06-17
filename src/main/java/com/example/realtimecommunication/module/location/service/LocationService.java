@@ -16,13 +16,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 @Service
 public class LocationService {
 
-    private final Map<Long, List<LocationDto>> locations = new ConcurrentHashMap<>();
     private static final long TIMEOUT = 10_000L;
+    private final Map<Long, List<LocationDto>> locations = new ConcurrentHashMap<>();
     private final Map<Long, BlockingQueue<DeferredResult<LocationDto>>> groupRequests =
             new ConcurrentHashMap<>();
 
     public LocationDto shareCurLocation(Long groupId) {
-        List<LocationDto> groupLocations = locations.computeIfAbsent(groupId, k -> new CopyOnWriteArrayList<>());
+        List<LocationDto> groupLocations =
+                locations.computeIfAbsent(groupId, k -> new CopyOnWriteArrayList<>());
 
         // 새로운 위치 정보 생성 및 추가
         LocationDto newLocation = makeRandomLocation();
