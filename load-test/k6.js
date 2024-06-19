@@ -95,11 +95,9 @@ function initializeStompClient(callback) {
             callback(socket);
         });
 
-        socket.on('message', function (message) {
-        });
+        socket.on('message', function (message) {});
 
-        socket.on('close', function () {
-        });
+        socket.on('close', function () {});
 
         stompClient = socket; // WebSocket 객체를 stompClient에 할당
     });
@@ -107,7 +105,7 @@ function initializeStompClient(callback) {
 
 function uuid() {
     const pattern = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
-    return pattern.replace(/[xy]/g, function (c) {
+    return pattern.replace(/[xy]/g, function(c) {
         const r = Math.random() * 16 | 0;
         const v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
@@ -116,10 +114,10 @@ function uuid() {
 
 
 export default function () {
-    //shortPollingTest();
-    // longPollingTest();
-    // sseTest();
-    // websocketTest();
+    shortPollingTest();
+    longPollingTest();
+    sseTest();
+    websocketTest();
     stompTest();
 
     sleep(3);
@@ -127,12 +125,13 @@ export default function () {
 
 export function longPollingTest() {
     initializeLongPollingConnection();
-    const url = `${baseUrl}/location/long/${randomInt}`;
-    const response = http.get(url);
-    check(response, {'Long Polling Post Status is 200': (r) => r.status === 200});
 
     const notifyResponse = http.post(`${baseUrl}/location/long/${randomInt}/notify`);
     check(notifyResponse, {'Long Polling Notify Status is 200': (r) => r.status === 200});
+
+    const url = `${baseUrl}/location/long/${randomInt}`;
+    const response = http.get(url);
+    check(response, {'Long Polling Post Status is 200': (r) => r.status === 200});
 }
 
 export function sseTest() {
@@ -151,9 +150,8 @@ export function websocketTest() {
 }
 
 export function stompTest() {
-
     initializeStompClient(function (socket) {
-        const stompMessage = `SEND\ndestination:/pub/share/${randomInt}\n\n${JSON.stringify({content: 'Hi from k6 STOMP!'})}\x00\n`;
+        const stompMessage = `SEND\ndestination:/pub/share/${randomInt}\n\n${JSON.stringify({ content: 'Hi from k6 STOMP!' })}\x00\n`;
 
         // WebSocket 연결이 열리면 STOMP 메시지를 전송합니다.
         socket.send(stompMessage);
